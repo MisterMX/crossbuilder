@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-tools/pkg/loader"
 	"sigs.k8s.io/yaml"
 
-	"github.com/mistermx/crossbuilder/pkg/utils"
+	xbuilderio "github.com/mistermx/crossbuilder/pkg/utils/io"
 )
 
 const (
@@ -39,7 +39,7 @@ type crdStorageOutputRule struct {
 }
 
 func (o *crdStorageOutputRule) Open(pkg *loader.Package, itemPath string) (io.WriteCloser, error) {
-	writer := utils.NewOnCloseWriter(nil, func(r io.Reader, len int64) (err error) {
+	writer := xbuilderio.NewOnCloseWriter(nil, func(r io.Reader, len int64) (err error) {
 		data, err := ioutil.ReadAll(r)
 		if err != nil {
 			return errors.Wrap(err, errReadResult)

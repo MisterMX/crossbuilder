@@ -9,7 +9,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	k8s.io/apiextensions-apiserver v0.23.0
 	k8s.io/apimachinery v0.23.3
-	sigs.k8s.io/controller-tools v0.8.0
+	sigs.k8s.io/controller-tools v0.8.1-0.20220225180951-8cb5ce83c3cc
 	sigs.k8s.io/yaml v1.3.0
 )
 

@@ -23,16 +23,13 @@ type ExampleStatus struct {
 // +genclient
 // +genclient:nonNamespaced
 
-// +kubebuilder:printcolumn:name="REVISION",type="string",JSONPath=".spec.revision"
-// +kubebuilder:printcolumn:name="CURRENT",type="string",JSONPath=".status.conditions[?(@.type=='Current')].status"
-// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:scope=Cluster,categories=crossplane
 // +kubebuilder:subresource:status
 type Example struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ExampleSpec   `json:"spec,omitempty"`
+	Spec   ExampleSpec   `json:"spec"`
 	Status ExampleStatus `json:"status,omitempty"`
 }
 

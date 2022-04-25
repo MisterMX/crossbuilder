@@ -27,7 +27,7 @@ type Generator struct {
 	// IgnoreUnexportedFields indicates that we should skip unexported fields.
 	//
 	// Left unspecified, the default is false.
-	// IgnoreUnexportedFields *bool `marker:",optional"`
+	IgnoreUnexportedFields *bool `marker:",optional"`
 
 	// AllowDangerousTypes allows types which are usually omitted from CRD generation
 	// because they are not recommended.
@@ -89,12 +89,6 @@ func (Generator) RegisterMarkers(into *markers.Registry) error {
 	return crdmarkers.Register(into)
 }
 
-// transformRemoveCRDStatus ensures we do not write the CRD status field.
-func transformRemoveCRDStatus(obj map[string]interface{}) error {
-	delete(obj, "status")
-	return nil
-}
-
 func (g Generator) Generate(ctx *genall.GenerationContext) error {
 	crdStorage := newCRDStorage()
 	crdGenerator := crd.Generator{
@@ -102,6 +96,7 @@ func (g Generator) Generate(ctx *genall.GenerationContext) error {
 		MaxDescLen:                 g.MaxDescLen,
 		CRDVersions:                g.CRDVersions,
 		GenerateEmbeddedObjectMeta: g.GenerateEmbeddedObjectMeta,
+		IgnoreUnexportedFields:     g.IgnoreUnexportedFields,
 	}
 	crdGeneratorCtx := &genall.GenerationContext{
 		Collector:  ctx.Collector,
@@ -126,7 +121,7 @@ func (g Generator) Generate(ctx *genall.GenerationContext) error {
 
 	for _, xrd := range xrds {
 		fileName := fmt.Sprintf("%s_%s.yaml", xrd.Spec.Group, xrd.Spec.Names.Plural)
-		if err := ctx.WriteYAML(fileName, xrd); err != nil {
+		if err := ctx.WriteYAML(fileName, []interface{}{xrd}, genall.WithTransform(transformRemoveCRDStatus)); err != nil {
 			return errors.Wrap(err, errWriteXRD)
 		}
 	}
@@ -177,9 +172,48 @@ func buildXRDVersions(crdVersions []apiext.CustomResourceDefinitionVersion) ([]x
 }
 
 func convertJSONSchemaToRawExtension(schema *apiext.JSONSchemaProps) (runtime.RawExtension, error) {
+	removeCrossplaneInternalFieldFromSchema(*schema)
 	rawExt := runtime.RawExtension{}
-	// raw, err := schema.Marshal()
 	raw, err := json.Marshal(schema)
 	rawExt.Raw = raw
 	return rawExt, err
+}
+
+func removeCrossplaneInternalFieldFromSchema(schema apiext.JSONSchemaProps) apiext.JSONSchemaProps {
+	paths := [][]string{
+		{"apiVersion"},
+		{"kind"},
+		{"metadata"},
+		{"spec", "claimRef"},
+		{"spec", "compositionRef"},
+		{"spec", "compositionRevisionRef"},
+		{"spec", "compositionSelector"},
+		{"spec", "publishConnectionDetailsTo"},
+		{"spec", "resourceRefs"},
+		{"spec", "writeConnectionSecretToRef"},
+		{"status", "conditions"},
+		{"status", "connectionDetails"},
+	}
+	for _, path := range paths {
+		schema = removePathFromSchema(schema, path)
+	}
+	return schema
+}
+
+func removePathFromSchema(schema apiext.JSONSchemaProps, pathSegments []string) apiext.JSONSchemaProps {
+	propName := pathSegments[0]
+	if len(pathSegments) == 1 {
+		delete(schema.Properties, propName)
+	} else if len(pathSegments) > 1 {
+		if prop, ok := schema.Properties[propName]; ok {
+			schema.Properties[propName] = removePathFromSchema(prop, pathSegments[1:])
+		}
+	}
+	return schema
+}
+
+// transformRemoveCRDStatus ensures we do not write the CRD status field.
+func transformRemoveCRDStatus(obj map[string]interface{}) error {
+	delete(obj, "status")
+	return nil
 }
