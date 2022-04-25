@@ -33,7 +33,7 @@ import (
 	"github.com/mistermx/crossbuilder/pkg/xrd"
 )
 
-//go:generate go run ../helpgen/main.go paths=../../pkg/... generate:headerFile=../../boilerplate.go.txt,year=2019
+//go:generate go run sigs.k8s.io/controller-tools/cmd/helpgen/ generate paths=../../pkg/... generate:headerFile=../../hack/boilerplate.go.txt,year=2022
 
 // Options are specified to controller-gen by turning generators and output rules into
 // markers, and then parsing them using the standard registry logic (without the "+").

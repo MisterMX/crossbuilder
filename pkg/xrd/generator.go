@@ -10,10 +10,11 @@ import (
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-tools/pkg/crd"
-	crdmarkers "sigs.k8s.io/controller-tools/pkg/crd/markers"
 	"sigs.k8s.io/controller-tools/pkg/genall"
 	"sigs.k8s.io/controller-tools/pkg/loader"
 	"sigs.k8s.io/controller-tools/pkg/markers"
+
+	xrdmarkers "github.com/mistermx/crossbuilder/pkg/xrd/markers"
 )
 
 const (
@@ -86,10 +87,15 @@ func filterTypesForCRDs(node ast.Node) bool {
 }
 
 func (Generator) RegisterMarkers(into *markers.Registry) error {
-	return crdmarkers.Register(into)
+	err := crd.Generator{}.RegisterMarkers(into)
+	if err != nil {
+		return err
+	}
+	return xrdmarkers.Register(into)
 }
 
 func (g Generator) Generate(ctx *genall.GenerationContext) error {
+	// Init CRD generator and store generated CRDs in memory
 	crdStorage := newCRDStorage()
 	crdGenerator := crd.Generator{
 		AllowDangerousTypes:        g.AllowDangerousTypes,
@@ -106,6 +112,15 @@ func (g Generator) Generate(ctx *genall.GenerationContext) error {
 		InputRule:  ctx.InputRule,
 	}
 
+	// Init XRD parser
+	xrdParser := Parser{
+		Collector: ctx.Collector,
+		Checker:   ctx.Checker,
+	}
+	for _, root := range ctx.Roots {
+		xrdParser.NeedPackage(root)
+	}
+
 	if err := crdGenerator.Generate(crdGeneratorCtx); err != nil {
 		return errors.Wrap(err, errGenerateCRDs)
 	}
@@ -116,6 +131,7 @@ func (g Generator) Generate(ctx *genall.GenerationContext) error {
 		if err != nil {
 			return errors.Wrap(err, errConvertCRDtoXRD)
 		}
+		xrdParser.ApplyForXRD(xrd)
 		xrds = append(xrds, xrd)
 	}
 

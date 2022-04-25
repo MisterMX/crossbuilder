@@ -3,16 +3,21 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: examples.test.example.com
+  name: xexamples.test.example.com
 spec:
+  claimNames:
+    kind: Example
+    plural: examples
+  defaultCompositionRef:
+    name: example-composition
   group: test.example.com
   names:
     categories:
     - crossplane
-    kind: Example
-    listKind: ExampleList
-    plural: examples
-    singular: example
+    kind: XExample
+    listKind: XExampleList
+    plural: xexamples
+    singular: xexample
   versions:
   - deprecated: false
     name: v1alpha1

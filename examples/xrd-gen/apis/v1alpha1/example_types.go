@@ -6,15 +6,15 @@ import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
-type ExampleParameters struct {
+type XExampleParameters struct {
 	ExampleField string `json:"exampleField"`
 }
 
-type ExampleSpec struct {
-	Parameters ExampleParameters `json:"parameters"`
+type XExampleSpec struct {
+	Parameters XExampleParameters `json:"parameters"`
 }
 
-type ExampleStatus struct {
+type XExampleStatus struct {
 	xpv1.ConditionedStatus `json:",inline"`
 }
 
@@ -25,18 +25,20 @@ type ExampleStatus struct {
 
 // +kubebuilder:resource:scope=Cluster,categories=crossplane
 // +kubebuilder:subresource:status
-type Example struct {
+// +crossbuilder:generate:xrd:claimNames:kind=Example,plural=examples
+// +crossbuilder:generate:xrd:defaultCompositionRef:name=example-composition
+type XExample struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ExampleSpec   `json:"spec"`
-	Status ExampleStatus `json:"status,omitempty"`
+	Spec   XExampleSpec   `json:"spec"`
+	Status XExampleStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-type ExampleList struct {
+type XExampleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Example `json:"items"`
+	Items           []XExample `json:"items"`
 }
