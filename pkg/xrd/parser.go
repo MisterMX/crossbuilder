@@ -8,7 +8,8 @@ import (
 	"sigs.k8s.io/controller-tools/pkg/markers"
 )
 
-type XRDMarker interface {
+// XRDMarker defines a marker for XRD types.
+type XRDMarker interface { // nolint:golint
 	ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error
 }
 
@@ -18,6 +19,7 @@ type XRDMarker interface {
 // loading behavior.
 type PackageOverride func(p *Parser, pkg *loader.Package)
 
+// Parser is used to apply XRD markers.
 type Parser struct {
 	Collector *markers.Collector
 
@@ -122,7 +124,7 @@ func (p *Parser) NeedPackage(pkg *loader.Package) {
 
 // ApplyForXRD applies all markers to the generated XRD.
 func (p *Parser) ApplyForXRD(xrd *xapiext.CompositeResourceDefinition) {
-	var packages []*loader.Package
+	packages := []*loader.Package{}
 	for pkg, gv := range p.GroupVersions {
 		if gv.Group != xrd.Spec.Group {
 			continue

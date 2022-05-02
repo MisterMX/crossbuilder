@@ -69,7 +69,7 @@ var (
 	optionsRegistry = &markers.Registry{}
 )
 
-func init() {
+func init() { // nolint:gocyclo
 	for genName, gen := range allGenerators {
 		// make the generator options marker itself
 		defn := markers.Must(markers.MakeDefinition(genName, markers.DescribesPackage, gen))
@@ -120,7 +120,7 @@ func init() {
 // out usage in only certain situations).
 type noUsageError struct{ error }
 
-func main() {
+func main() { // nolint:gocyclo
 	helpLevel := 0
 	whichLevel := 0
 	showVersion := false
@@ -196,7 +196,7 @@ func main() {
 	})
 
 	if err := cmd.Execute(); err != nil {
-		if _, noUsage := err.(noUsageError); !noUsage {
+		if _, noUsage := err.(noUsageError); !noUsage { // nolint:errorlint
 			// print the usage unless we suppressed it
 			if err := cmd.Usage(); err != nil {
 				panic(err)
@@ -220,7 +220,7 @@ func printMarkerDocs(c *cobra.Command, rawOptions []string, whichLevel int) erro
 	return helpForLevels(c.OutOrStdout(), c.OutOrStderr(), whichLevel, reg, help.SortByCategory)
 }
 
-func helpForLevels(mainOut io.Writer, errOut io.Writer, whichLevel int, reg *markers.Registry, sorter help.SortGroup) error {
+func helpForLevels(mainOut io.Writer, errOut io.Writer, whichLevel int, reg *markers.Registry, sorter help.SortGroup) error { // nolint:gocyclo
 	helpInfo := help.ByCategory(reg, sorter)
 	switch whichLevel {
 	case jsonHelp:

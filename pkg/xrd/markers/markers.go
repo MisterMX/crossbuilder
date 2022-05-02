@@ -7,7 +7,7 @@ import (
 	"sigs.k8s.io/controller-tools/pkg/markers"
 )
 
-// CRDMarkers lists all markers that directly modify the CRD (not validation
+// XRDMarkers lists all markers that directly modify the XRD (not validation
 // schemas).
 var XRDMarkers = []*definitionWithHelp{
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:claimNames", markers.DescribesType, ClaimNames{})),
@@ -21,6 +21,7 @@ func init() {
 
 // +controllertools:marker:generateHelp:category=XRD
 
+// ClaimNames is a marker to specify claim names for generated XRDs.
 type ClaimNames struct {
 	Kind       string   `marker:"kind"`
 	Plural     string   `marker:"plural"`
@@ -30,6 +31,7 @@ type ClaimNames struct {
 	Categories []string `marker:"categories"`
 }
 
+// ApplyToXRD applies the claim names to the XRD.
 func (c ClaimNames) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
 	xrd.Spec.ClaimNames = &apiext.CustomResourceDefinitionNames{
 		Kind:       c.Kind,
@@ -45,10 +47,13 @@ func (c ClaimNames) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version
 
 // +controllertools:marker:generateHelp:category=XRD
 
+// DefaultCompositionRef is a marker to specify the default composition ref of
+// an XRD.
 type DefaultCompositionRef struct {
 	Name string `marker:"name"`
 }
 
+// ApplyToXRD applies the default composition ref to the XRD.
 func (c DefaultCompositionRef) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
 	xrd.Spec.DefaultCompositionRef = &xpv1.Reference{
 		Name: c.Name,
@@ -59,10 +64,13 @@ func (c DefaultCompositionRef) ApplyToXRD(xrd *xapiext.CompositeResourceDefiniti
 
 // +controllertools:marker:generateHelp:category=XRD
 
+// EnforcedCompositionRef is a marker to specify the enforced composition ref of
+// an XRD.
 type EnforcedCompositionRef struct {
 	Name string `marker:"name"`
 }
 
+// ApplyToXRD applies the enforced composition ref to the XRD.
 func (c EnforcedCompositionRef) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
 	xrd.Spec.EnforcedCompositionRef = &xpv1.Reference{
 		Name: c.Name,
