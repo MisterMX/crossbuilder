@@ -22,14 +22,22 @@ func init() {
 // +controllertools:marker:generateHelp:category=XRD
 
 type ClaimNames struct {
-	Kind   string `marker:"kind"`
-	Plural string `marker:"plural"`
+	Kind       string   `marker:"kind"`
+	Plural     string   `marker:"plural"`
+	Singular   string   `marker:"singular"`
+	ShortNames []string `marker:"shortNames"`
+	ListKind   string   `marker:"listKind"`
+	Categories []string `marker:"categories"`
 }
 
 func (c ClaimNames) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
 	xrd.Spec.ClaimNames = &apiext.CustomResourceDefinitionNames{
-		Kind:   c.Kind,
-		Plural: c.Plural,
+		Kind:       c.Kind,
+		Plural:     c.Plural,
+		Singular:   c.Singular,
+		ShortNames: c.ShortNames,
+		ListKind:   c.ListKind,
+		Categories: c.Categories,
 	}
 	// test(c)
 	return nil
