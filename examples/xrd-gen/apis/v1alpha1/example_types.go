@@ -27,6 +27,7 @@ type XExampleStatus struct {
 // +kubebuilder:subresource:status
 // +crossbuilder:generate:xrd:claimNames:kind=Example,plural=examples
 // +crossbuilder:generate:xrd:defaultCompositionRef:name=example-composition
+// +crossbuilder:generate:xrd:enforcedCompositionRef:name=example-composition-2
 type XExample struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -7,15 +7,12 @@ import (
 	"sigs.k8s.io/controller-tools/pkg/markers"
 )
 
-const (
-	AnnotationClaimRefName = "xrd.crossbuilder.crossplane.io/claim-ref-kind"
-)
-
 // CRDMarkers lists all markers that directly modify the CRD (not validation
 // schemas).
 var XRDMarkers = []*definitionWithHelp{
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:claimNames", markers.DescribesType, ClaimNames{})),
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:defaultCompositionRef", markers.DescribesType, DefaultCompositionRef{})),
+	must(markers.MakeDefinition("crossbuilder:generate:xrd:enforcedCompositionRef", markers.DescribesType, EnforcedCompositionRef{})),
 }
 
 func init() {
@@ -52,10 +49,16 @@ func (c DefaultCompositionRef) ApplyToXRD(xrd *xapiext.CompositeResourceDefiniti
 	return nil
 }
 
-// type XRDMarker interface {
-// 	ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error
-// }
+// +controllertools:marker:generateHelp:category=XRD
 
-// func test(m XRDMarker) {
+type EnforcedCompositionRef struct {
+	Name string `marker:"name"`
+}
 
-// }
+func (c EnforcedCompositionRef) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
+	xrd.Spec.EnforcedCompositionRef = &xpv1.Reference{
+		Name: c.Name,
+	}
+	// test(c)
+	return nil
+}

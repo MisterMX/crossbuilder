@@ -10,6 +10,8 @@ spec:
     plural: examples
   defaultCompositionRef:
     name: example-composition
+  enforcedCompositionRef:
+    name: example-composition-2
   group: test.example.com
   names:
     categories:
