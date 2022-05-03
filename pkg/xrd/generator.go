@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/controller-tools/pkg/loader"
 	"sigs.k8s.io/controller-tools/pkg/markers"
 
+	"github.com/mistermx/crossbuilder/pkg/utils"
 	xrdmarkers "github.com/mistermx/crossbuilder/pkg/xrd/markers"
 )
 
@@ -24,6 +25,7 @@ const (
 	errWriteXRD          = "failed to write XRD to YAML"
 )
 
+// Generator is a generator for XRDs.
 type Generator struct {
 	// IgnoreUnexportedFields indicates that we should skip unexported fields.
 	//
@@ -63,6 +65,7 @@ type Generator struct {
 	GenerateEmbeddedObjectMeta *bool `marker:",optional"`
 }
 
+// CheckFilter returns the node filter for this generator.
 func (Generator) CheckFilter() loader.NodeFilter {
 	return filterTypesForCRDs
 }
@@ -86,6 +89,7 @@ func filterTypesForCRDs(node ast.Node) bool {
 	}
 }
 
+// RegisterMarkers registers the markers used by this generator.
 func (Generator) RegisterMarkers(into *markers.Registry) error {
 	err := crd.Generator{}.RegisterMarkers(into)
 	if err != nil {
@@ -94,6 +98,7 @@ func (Generator) RegisterMarkers(into *markers.Registry) error {
 	return xrdmarkers.Register(into)
 }
 
+// Generate generates the XRDs for the given GenerationContext.
 func (g Generator) Generate(ctx *genall.GenerationContext) error {
 	// Init CRD generator and store generated CRDs in memory
 	crdStorage := newCRDStorage()
@@ -176,7 +181,7 @@ func buildXRDVersions(crdVersions []apiext.CustomResourceDefinitionVersion) ([]x
 			Name: cV.Name,
 			// Referenceable: ,
 			Served:             cV.Served,
-			Deprecated:         &cV.Deprecated,
+			Deprecated:         utils.BoolPtr(cV.Deprecated),
 			DeprecationWarning: cV.DeprecationWarning,
 			Schema: &xapiext.CompositeResourceValidation{
 				OpenAPIV3Schema: schema,

@@ -1,8 +1,6 @@
 package markers
 
 import (
-	"reflect"
-
 	"sigs.k8s.io/controller-tools/pkg/markers"
 )
 
@@ -35,25 +33,25 @@ func must(def *markers.Definition, err error) *definitionWithHelp {
 // AllDefinitions contains all marker definitions for this package.
 var AllDefinitions []*definitionWithHelp
 
-type hasHelp interface {
-	Help() *markers.DefinitionHelp
-}
+// type hasHelp interface {
+// 	Help() *markers.DefinitionHelp
+// }
 
 // mustMakeAllWithPrefix converts each object into a marker definition using
 // the object's type's with the prefix to form the marker name.
-func mustMakeAllWithPrefix(prefix string, target markers.TargetType, objs ...interface{}) []*definitionWithHelp {
-	defs := make([]*definitionWithHelp, len(objs))
-	for i, obj := range objs {
-		name := prefix + ":" + reflect.TypeOf(obj).Name()
-		def, err := markers.MakeDefinition(name, target, obj)
-		if err != nil {
-			panic(err)
-		}
-		defs[i] = &definitionWithHelp{Definition: def, Help: obj.(hasHelp).Help()}
-	}
+// func mustMakeAllWithPrefix(prefix string, target markers.TargetType, objs ...interface{}) []*definitionWithHelp {
+// 	defs := make([]*definitionWithHelp, len(objs))
+// 	for i, obj := range objs {
+// 		name := prefix + ":" + reflect.TypeOf(obj).Name()
+// 		def, err := markers.MakeDefinition(name, target, obj)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		defs[i] = &definitionWithHelp{Definition: def, Help: obj.(hasHelp).Help()}
+// 	}
 
-	return defs
-}
+// 	return defs
+// }
 
 // Register registers all definitions for CRD generation to the given registry.
 func Register(reg *markers.Registry) error {
