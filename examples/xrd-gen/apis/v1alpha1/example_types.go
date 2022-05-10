@@ -1,9 +1,9 @@
 package v1alpha1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 type XExampleParameters struct {
@@ -42,4 +42,16 @@ type XExampleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []XExample `json:"items"`
+}
+
+// Repository type metadata.
+var (
+	XExampleKind             = "XExample"
+	XExampleGroupKind        = schema.GroupKind{Group: XRDGroup, Kind: XExampleKind}.String()
+	XExampleKindAPIVersion   = XExampleKind + "." + GroupVersion.String()
+	XExampleGroupVersionKind = GroupVersion.WithKind(XExampleKind)
+)
+
+func init() {
+	SchemeBuilder.Register(&XExample{}, &XExampleList{})
 }

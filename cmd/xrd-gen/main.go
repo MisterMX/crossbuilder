@@ -24,6 +24,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"sigs.k8s.io/controller-tools/pkg/deepcopy"
 	"sigs.k8s.io/controller-tools/pkg/genall"
 	"sigs.k8s.io/controller-tools/pkg/genall/help"
 	prettyhelp "sigs.k8s.io/controller-tools/pkg/genall/help/pretty"
@@ -48,7 +49,7 @@ var (
 		// "crd": crd.Generator{},
 		"xrd": xrd.Generator{},
 		// "rbac":        rbac.Generator{},
-		// "object":      deepcopy.Generator{},
+		"object": deepcopy.Generator{},
 		// "webhook":     webhook.Generator{},
 		// "schemapatch": schemapatcher.Generator{},
 	}

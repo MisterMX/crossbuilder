@@ -1,0 +1,26 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  creationTimestamp: null
+  name: example
+spec:
+  compositeTypeRef:
+    apiVersion: test.example.com/v1alpha1
+    kind: XExample
+  resources:
+  - base:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        creationTimestamp: null
+      rules:
+      - apiGroups:
+        - v1
+        resources:
+        - ""
+        verbs:
+        - GET
+    name: cluster-role
+    patches:
+    - fromFieldPath: spec.parameters.exampleField
+      toFieldPath: rules[0].resources[0]
