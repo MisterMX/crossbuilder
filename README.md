@@ -3,13 +3,9 @@
 Crossbuilder is a tool that allows the generation of Crossplane XRDs and 
 composition from go code.
 
-It is a wrapper around [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder)
-and [controller-gen](https://github.com/kubernetes-sigs/controller-tools) that
-allows generating Crossplane XRDs from Go.
-
 ## XRD Generation
 
-Crossbuilders `xrd-gen` wraps around [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder)
+Crossbuilder's `xrd-gen` wraps around [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder)
 and [controller-gen](https://github.com/kubernetes-sigs/controller-tools) but
 instead of generating CRDs (Custom Resource Definitions) it generates XRDs
 (Composite Resource Definitions) that are part of the Crossplane ecosystem.
