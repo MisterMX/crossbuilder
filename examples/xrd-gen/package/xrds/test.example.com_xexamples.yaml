@@ -6,16 +6,8 @@ metadata:
   name: xexamples.test.example.com
 spec:
   claimNames:
-    categories:
-    - xrd
-    - test
-    - example
     kind: Example
-    listKind: ExampleList
     plural: examples
-    shortNames:
-    - exmpl
-    singular: example
   defaultCompositionRef:
     name: example-composition
   enforcedCompositionRef:

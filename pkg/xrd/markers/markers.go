@@ -25,10 +25,10 @@ func init() {
 type ClaimNames struct {
 	Kind       string   `marker:"kind"`
 	Plural     string   `marker:"plural"`
-	Singular   string   `marker:"singular"`
-	ShortNames []string `marker:"shortNames"`
-	ListKind   string   `marker:"listKind"`
-	Categories []string `marker:"categories"`
+	Singular   string   `marker:"singular,optional"`
+	ShortNames []string `marker:"shortNames,optional"`
+	ListKind   string   `marker:"listKind,optional"`
+	Categories []string `marker:"categories,optional"`
 }
 
 // ApplyToXRD applies the claim names to the XRD.
