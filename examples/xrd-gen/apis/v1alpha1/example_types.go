@@ -25,7 +25,7 @@ type XExampleStatus struct {
 
 // +kubebuilder:resource:scope=Cluster,categories=crossplane
 // +kubebuilder:subresource:status
-// +crossbuilder:generate:xrd:claimNames:kind=Example,plural=examples,singular=example,shortNames=exmpl,listKind=ExampleList,categories=xrd;test;example
+// +crossbuilder:generate:xrd:claimNames:kind=Example,plural=examples
 // +crossbuilder:generate:xrd:defaultCompositionRef:name=example-composition
 // +crossbuilder:generate:xrd:enforcedCompositionRef:name=example-composition-2
 type XExample struct {
