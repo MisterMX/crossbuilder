@@ -56,21 +56,54 @@ func getObjectField(obj reflect.Type, jsonKey string) (reflect.Type, error) {
 	for i := 0; i < obj.NumField(); i++ {
 		field := obj.Field(i)
 		tag := field.Tag.Get("json")
-		name, _ := parseTag(tag)
+		name, options := parseTag(tag)
 
-		if name == jsonKey {
+		if options.Contains("inline") {
+			res, err := getObjectField(field.Type, jsonKey)
+			if err == nil && res != nil {
+				return res, nil
+			}
+		} else if name == jsonKey {
 			return field.Type, nil
 		}
 	}
 	return nil, errors.Errorf(errFmtFieldNotFound, jsonKey)
 }
 
-// parseTag splits the given JSON tag into its name and options
-// extracted from
-// https://cs.opensource.google/go/go/+/dev.boringcrypto.go1.17:src/encoding/json/tags.go
-func parseTag(tag string) (string, string) {
+// The following code is extracted from
+// https://cs.opensource.google/go/go/+/release-branch.go1.17:src/encoding/json/tags.go
+
+// tagOptions is the string following a comma in a struct field's "json"
+// tag, or the empty string. It does not include the leading comma.
+type tagOptions string
+
+// parseTag splits a struct field's json tag into its name and
+// comma-separated options.
+func parseTag(tag string) (string, tagOptions) {
 	if idx := strings.Index(tag, ","); idx != -1 {
-		return tag[:idx], tag[idx+1:]
+		return tag[:idx], tagOptions(tag[idx+1:])
 	}
-	return tag, ""
+	return tag, tagOptions("")
+}
+
+// Contains reports whether a comma-separated list of options
+// contains a particular substr flag. substr must be surrounded by a
+// string boundary or commas.
+func (o tagOptions) Contains(optionName string) bool {
+	if len(o) == 0 {
+		return false
+	}
+	s := string(o)
+	for s != "" {
+		var next string
+		i := strings.Index(s, ",")
+		if i >= 0 {
+			s, next = s[:i], s[i+1:]
+		}
+		if s == optionName {
+			return true
+		}
+		s = next
+	}
+	return false
 }

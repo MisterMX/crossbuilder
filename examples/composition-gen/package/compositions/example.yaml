@@ -20,7 +20,15 @@ spec:
         - ""
         verbs:
         - GET
+      - apiGroups:
+        - v1
+        resourceNames:
+        - ""
+        verbs:
+        - GET
     name: cluster-role
     patches:
     - fromFieldPath: spec.parameters.exampleField
       toFieldPath: rules[0].resources[0]
+    - fromFieldPath: spec.providerConfigRef.name
+      toFieldPath: rules[1].resourceNames[0]

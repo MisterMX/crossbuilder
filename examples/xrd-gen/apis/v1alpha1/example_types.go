@@ -11,7 +11,8 @@ type XExampleParameters struct {
 }
 
 type XExampleSpec struct {
-	Parameters XExampleParameters `json:"parameters"`
+	xpv1.ResourceSpec `json:",inline"`
+	Parameters        XExampleParameters `json:"parameters"`
 }
 
 type XExampleStatus struct {

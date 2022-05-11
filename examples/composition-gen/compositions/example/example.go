@@ -32,14 +32,25 @@ func (b *ExampleBuilder) Build(c build.CompositionSkeleton) {
 						APIGroups: []string{"v1"},
 						Resources: []string{""}, // patched
 					},
+					{
+						Verbs:         []string{"GET"},
+						APIGroups:     []string{"v1"},
+						ResourceNames: []string{""}, // patched
+					},
 				},
 			},
 		}).
 		WithName("cluster-role").
-		WithPatches(simplePatch(
-			"spec.parameters.exampleField",
-			"rules[0].resources[0]",
-		))
+		WithPatches(
+			simplePatch(
+				"spec.parameters.exampleField",
+				"rules[0].resources[0]",
+			),
+			simplePatch(
+				"spec.providerConfigRef.name",
+				"rules[1].resourceNames[0]",
+			),
+		)
 }
 
 func simplePatch(from, to string) xv1.Patch {
