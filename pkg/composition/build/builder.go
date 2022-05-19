@@ -7,7 +7,7 @@ import (
 
 const (
 	errWriteComposition    = "failed to write composition"
-	errFmtBuildComposition = "failed to generate composition from skeleton at index %d"
+	errFmtBuildComposition = "failed to build composition at index %d"
 )
 
 // CompositionBuilder specifies the interface for user defined type that is

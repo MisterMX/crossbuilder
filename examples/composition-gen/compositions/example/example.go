@@ -23,7 +23,7 @@ func (b *ExampleBuilder) Build(c build.CompositionSkeleton) {
 	c.WithName("example")
 
 	c.
-		WithResource(build.ObjectKindReference{
+		NewResource(build.ObjectKindReference{
 			GroupVersionKind: rbacv1.SchemeGroupVersion.WithKind(reflect.TypeOf(rbacv1.ClusterRole{}).Name()),
 			Object: &rbacv1.ClusterRole{
 				Rules: []rbacv1.PolicyRule{
@@ -40,6 +40,10 @@ func (b *ExampleBuilder) Build(c build.CompositionSkeleton) {
 				},
 			},
 		}).
+		RegisterLabels(
+			"crossplane.io/claim-namespace",
+			"crossplane.io/claim-name",
+		).
 		WithName("cluster-role").
 		WithPatches(
 			simplePatch(
@@ -49,6 +53,14 @@ func (b *ExampleBuilder) Build(c build.CompositionSkeleton) {
 			simplePatch(
 				"spec.providerConfigRef.name",
 				"rules[1].resourceNames[0]",
+			),
+			simplePatch(
+				"metadata.labels[crossplane.io/claim-namespace]",
+				"metadata.labels[crossplane.io/claim-namespace]",
+			),
+			simplePatch(
+				"metadata.labels[crossplane.io/claim-name]",
+				"metadata.labels[crossplane.io/claim-name]",
 			),
 		)
 }
