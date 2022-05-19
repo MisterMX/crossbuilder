@@ -9,16 +9,18 @@ import (
 )
 
 const (
-	errEmptyPath          = "the given path is empty"
-	errParseFieldPath     = "cannot parse fieldpath"
-	errFmtNotStruct       = "expected struct type, but got %s"
-	errFmtNotArrayOrSlice = "expected array or slice type but got %s"
-	errFmtFieldNotFound   = "cannot find a field with the JSON key '%s'"
-	errGetStructField     = "cannot get struct field"
+	errEmptyPath           = "the given path is empty"
+	errParseFieldPath      = "cannot parse fieldpath"
+	errFmtNotStruct        = "expected struct type, but got %s"
+	errFmtNotArrayOrSlice  = "expected array or slice type but got %s"
+	errFmtFieldNotFound    = "no field with JSON key '%s'"
+	errGetStructField      = "cannot get field"
+	errMapTypeNotSupported = "static path validation is not supported for maps"
+	errFmtInvalidFieldPath = "invalid field path '%s'"
 )
 
 // ValidateFieldPath checks if the JSON path exists for the given object.
-func ValidateFieldPath(obj interface{}, path string) error {
+func ValidateFieldPath(obj interface{}, path string, knownPaths []fieldpath.Segments) error {
 	segments, err := fieldpath.Parse(path)
 	if err != nil {
 		return errors.Wrap(err, errParseFieldPath)
@@ -26,7 +28,14 @@ func ValidateFieldPath(obj interface{}, path string) error {
 	if len(segments) == 0 {
 		return errors.New(errEmptyPath)
 	}
+	if isKnownPath(segments, knownPaths) {
+		return nil // path is a registered path
+	}
 
+	return errors.Wrap(validatePath(obj, segments), path)
+}
+
+func validatePath(obj interface{}, segments fieldpath.Segments) error {
 	current := reflect.TypeOf(obj)
 	for _, segment := range segments {
 		if current.Kind() == reflect.Ptr {
@@ -35,6 +44,7 @@ func ValidateFieldPath(obj interface{}, path string) error {
 
 		switch segment.Type {
 		case fieldpath.SegmentField:
+			var err error
 			current, err = getObjectField(current, segment.Field)
 			if err != nil {
 				return errors.Wrap(err, errGetStructField)
@@ -49,7 +59,37 @@ func ValidateFieldPath(obj interface{}, path string) error {
 	return nil // Path exists
 }
 
+func isKnownPath(path fieldpath.Segments, knownPaths []fieldpath.Segments) bool {
+	for _, known := range knownPaths {
+		if len(path) != len(known) {
+			continue
+		}
+		for i, knownSeg := range known {
+			if path[i] != knownSeg {
+				continue
+			}
+		}
+		return true
+	}
+	return false
+}
+
+func parseFieldPaths(paths []string) ([]fieldpath.Segments, error) {
+	parsed := make([]fieldpath.Segments, len(paths))
+	for i, p := range paths {
+		seg, err := fieldpath.Parse(p)
+		if err != nil {
+			return nil, errors.Wrapf(err, errFmtInvalidFieldPath, p)
+		}
+		parsed[i] = seg
+	}
+	return parsed, nil
+}
+
 func getObjectField(obj reflect.Type, jsonKey string) (reflect.Type, error) {
+	if obj.Kind() == reflect.Map {
+		return nil, errors.New(errMapTypeNotSupported)
+	}
 	if obj.Kind() != reflect.Struct {
 		return nil, errors.Errorf(errFmtNotStruct, obj.Kind())
 	}

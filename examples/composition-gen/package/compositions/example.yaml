@@ -32,3 +32,7 @@ spec:
       toFieldPath: rules[0].resources[0]
     - fromFieldPath: spec.providerConfigRef.name
       toFieldPath: rules[1].resourceNames[0]
+    - fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+      toFieldPath: metadata.labels[crossplane.io/claim-namespace]
+    - fromFieldPath: metadata.labels[crossplane.io/claim-name]
+      toFieldPath: metadata.labels[crossplane.io/claim-name]
