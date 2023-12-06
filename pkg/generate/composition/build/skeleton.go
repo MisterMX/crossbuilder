@@ -3,7 +3,6 @@ package build
 import (
 	"fmt"
 
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/fieldpath"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	xapiextv1 "github.com/crossplane/crossplane/apis/apiextensions/v1"
@@ -12,7 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/mistermx/crossbuilder/pkg/utils"
+	"github.com/mistermx/crossbuilder/pkg/generate/utils"
 )
 
 const (
@@ -97,7 +96,7 @@ type CompositionSkeleton interface {
 
 	// WithPublishConnectionDetailsWithStoreConfig sets the
 	// PublishConnectionDetailsWithStoreConfig of this CompositionSkeleton.
-	WithPublishConnectionDetailsWithStoreConfig(ref *xpv1.Reference) CompositionSkeleton
+	WithPublishConnectionDetailsWithStoreConfig(ref *xapiextv1.StoreConfigReference) CompositionSkeleton
 
 	// WithWriteConnectionSecretsToNamespace sets the
 	// WriteConnectionSecretsToNamespace of this compositionSkeleton.
@@ -139,7 +138,7 @@ type compositionSkeleton struct {
 	registeredPaths                         []string
 	name                                    string
 	composeTemplateSkeletons                []*composeTemplateSkeleton
-	publishConnectionDetailsWithStoreConfig *xpv1.Reference
+	publishConnectionDetailsWithStoreConfig *xapiextv1.StoreConfigReference
 	writeConnectionSecretsToNamespace       *string
 }
 
@@ -188,7 +187,7 @@ func (c *compositionSkeleton) NewResource(base ObjectKindReference) ComposedTemp
 
 // WithPublishConnectionDetailsWithStoreConfig sets the
 // PublishConnectionDetailsWithStoreConfig of this CompositionSkeleton.
-func (c *compositionSkeleton) WithPublishConnectionDetailsWithStoreConfig(ref *xpv1.Reference) CompositionSkeleton {
+func (c *compositionSkeleton) WithPublishConnectionDetailsWithStoreConfig(ref *xapiextv1.StoreConfigReference) CompositionSkeleton {
 	c.publishConnectionDetailsWithStoreConfig = ref
 	return c
 }

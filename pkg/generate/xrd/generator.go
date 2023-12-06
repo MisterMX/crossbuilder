@@ -9,12 +9,12 @@ import (
 	"github.com/pkg/errors"
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-tools/pkg/crd"
 	"sigs.k8s.io/controller-tools/pkg/genall"
 	"sigs.k8s.io/controller-tools/pkg/loader"
 	"sigs.k8s.io/controller-tools/pkg/markers"
 
-	"github.com/mistermx/crossbuilder/pkg/generate/utils"
 	xrdmarkers "github.com/mistermx/crossbuilder/pkg/generate/xrd/markers"
 )
 
@@ -142,7 +142,7 @@ func (g Generator) Generate(ctx *genall.GenerationContext) error {
 
 	for _, xrd := range xrds {
 		fileName := fmt.Sprintf("%s_%s.yaml", xrd.Spec.Group, xrd.Spec.Names.Plural)
-		if err := ctx.WriteYAML(fileName, []interface{}{xrd}, genall.WithTransform(transformRemoveCRDStatus)); err != nil {
+		if err := ctx.WriteYAML(fileName, "", []interface{}{xrd}, genall.WithTransform(transformRemoveCRDStatus)); err != nil {
 			return errors.Wrap(err, errWriteXRD)
 		}
 	}
@@ -164,8 +164,10 @@ func convertCRDToXRD(crd *apiext.CustomResourceDefinition) (*xapiext.CompositeRe
 			Versions: xrdVersions,
 			// DefaultCompositionRef: ,
 			// EnforcedCompositionRef: ,
+
 		},
 	}
+	xrd.SetGroupVersionKind(xapiext.CompositeResourceDefinitionGroupVersionKind)
 	return xrd, nil
 }
 
@@ -181,14 +183,26 @@ func buildXRDVersions(crdVersions []apiext.CustomResourceDefinitionVersion) ([]x
 			Name: cV.Name,
 			// Referenceable: ,
 			Served:             cV.Served,
-			Deprecated:         utils.BoolPtr(cV.Deprecated),
 			DeprecationWarning: cV.DeprecationWarning,
 			Schema: &xapiext.CompositeResourceValidation{
 				OpenAPIV3Schema: schema,
 			},
 			AdditionalPrinterColumns: cV.AdditionalPrinterColumns,
 		}
+
+		if cV.Deprecated {
+			xrdVersions[i].Deprecated = ptr.To(true)
+		}
 	}
+
+	// TODO: Exactly one version must be marked as referencable. This will break
+	//       if multiple versions exist per XRD.
+	//       There needs to be a way for the user to specify which version is
+	//       the desired one.
+	if len(xrdVersions) == 1 {
+		xrdVersions[0].Referenceable = true
+	}
+
 	return xrdVersions, nil
 }
 
@@ -205,15 +219,15 @@ func removeCrossplaneInternalFieldFromSchema(schema apiext.JSONSchemaProps) apie
 		{"apiVersion"},
 		{"kind"},
 		{"metadata"},
-		{"spec", "claimRef"},
-		{"spec", "compositionRef"},
-		{"spec", "compositionRevisionRef"},
-		{"spec", "compositionSelector"},
-		{"spec", "publishConnectionDetailsTo"},
-		{"spec", "resourceRefs"},
-		{"spec", "writeConnectionSecretToRef"},
-		{"status", "conditions"},
-		{"status", "connectionDetails"},
+		// {"spec", "claimRef"},
+		// {"spec", "compositionRef"},
+		// {"spec", "compositionRevisionRef"},
+		// {"spec", "compositionSelector"},
+		// {"spec", "publishConnectionDetailsTo"},
+		// {"spec", "resourceRefs"},
+		// {"spec", "writeConnectionSecretToRef"},
+		// {"status", "conditions"},
+		// {"status", "connectionDetails"},
 	}
 	for _, path := range paths {
 		schema = removePathFromSchema(schema, path)

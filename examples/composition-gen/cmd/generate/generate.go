@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/mistermx/crossbuilder/examples/composition-gen/compositions/example"
-	"github.com/mistermx/crossbuilder/pkg/composition/build"
+	"github.com/mistermx/crossbuilder/pkg/generate/composition/build"
 )
 
 func main() {

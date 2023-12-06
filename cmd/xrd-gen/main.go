@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-
 	"sigs.k8s.io/controller-tools/pkg/deepcopy"
 	"sigs.k8s.io/controller-tools/pkg/genall"
 	"sigs.k8s.io/controller-tools/pkg/genall/help"
@@ -138,7 +137,7 @@ func main() { // nolint:gocyclo
 	controller-gen object paths=./apis/v1beta1/some_types.go
 
 	# Generate OpenAPI v3 schemas for API packages and merge them into existing CRD manifests
-	controller-gen schemapatch:manifests=./manifests output:dir=./manifests paths=./pkg/apis/... 
+	controller-gen schemapatch:manifests=./manifests output:dir=./manifests paths=./pkg/apis/...
 
 	# Run all the generators for a given project
 	controller-gen paths=./apis/...
