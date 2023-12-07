@@ -13,6 +13,7 @@ var XRDMarkers = []*definitionWithHelp{
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:claimNames", markers.DescribesType, ClaimNames{})),
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:defaultCompositionRef", markers.DescribesType, DefaultCompositionRef{})),
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:enforcedCompositionRef", markers.DescribesType, EnforcedCompositionRef{})),
+	must(markers.MakeDefinition("crossbuilder:generate:xrd:defaultCompositeDeletePolicy", markers.DescribesType, DefaultCompositeDeletePolicy{})),
 }
 
 func init() {
@@ -55,7 +56,7 @@ type DefaultCompositionRef struct {
 
 // ApplyToXRD applies the default composition ref to the XRD.
 func (c DefaultCompositionRef) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
-	xrd.Spec.DefaultCompositionRef = &xpv1.Reference{
+	xrd.Spec.DefaultCompositionRef = &xapiext.CompositionReference{
 		Name: c.Name,
 	}
 	// test(c)
@@ -72,9 +73,24 @@ type EnforcedCompositionRef struct {
 
 // ApplyToXRD applies the enforced composition ref to the XRD.
 func (c EnforcedCompositionRef) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
-	xrd.Spec.EnforcedCompositionRef = &xpv1.Reference{
+	xrd.Spec.EnforcedCompositionRef = &xapiext.CompositionReference{
 		Name: c.Name,
 	}
+	// test(c)
+	return nil
+}
+
+// +controllertools:marker:generateHelp:category=XRD
+
+// DefaultCompositeDeletePolicy is a marker to specify the default composite
+// delete policy of an XRD.
+type DefaultCompositeDeletePolicy struct {
+	Policy xpv1.CompositeDeletePolicy `marker:"policy"`
+}
+
+// ApplyToXRD applies the enforced composition ref to the XRD.
+func (c DefaultCompositeDeletePolicy) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
+	xrd.Spec.DefaultCompositeDeletePolicy = &c.Policy
 	// test(c)
 	return nil
 }

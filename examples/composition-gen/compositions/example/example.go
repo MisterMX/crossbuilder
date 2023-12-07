@@ -7,7 +7,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 
 	"github.com/mistermx/crossbuilder/examples/xrd-gen/apis/v1alpha1"
-	"github.com/mistermx/crossbuilder/pkg/composition/build"
+	"github.com/mistermx/crossbuilder/pkg/generate/composition/build"
 )
 
 type ExampleBuilder struct{}

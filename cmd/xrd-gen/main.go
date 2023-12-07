@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-
 	"sigs.k8s.io/controller-tools/pkg/deepcopy"
 	"sigs.k8s.io/controller-tools/pkg/genall"
 	"sigs.k8s.io/controller-tools/pkg/genall/help"
@@ -31,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-tools/pkg/markers"
 	"sigs.k8s.io/controller-tools/pkg/version"
 
-	"github.com/mistermx/crossbuilder/pkg/xrd"
+	"github.com/mistermx/crossbuilder/pkg/generate/xrd"
 )
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/helpgen/ generate paths=../../pkg/... generate:headerFile=../../hack/boilerplate.go.txt,year=2022
@@ -138,7 +137,7 @@ func main() { // nolint:gocyclo
 	controller-gen object paths=./apis/v1beta1/some_types.go
 
 	# Generate OpenAPI v3 schemas for API packages and merge them into existing CRD manifests
-	controller-gen schemapatch:manifests=./manifests output:dir=./manifests paths=./pkg/apis/... 
+	controller-gen schemapatch:manifests=./manifests output:dir=./manifests paths=./pkg/apis/...
 
 	# Run all the generators for a given project
 	controller-gen paths=./apis/...
