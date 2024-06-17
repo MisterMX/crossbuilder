@@ -14,6 +14,7 @@ var XRDMarkers = []*definitionWithHelp{
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:defaultCompositionRef", markers.DescribesType, DefaultCompositionRef{})),
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:enforcedCompositionRef", markers.DescribesType, EnforcedCompositionRef{})),
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:defaultCompositeDeletePolicy", markers.DescribesType, DefaultCompositeDeletePolicy{})),
+	must(markers.MakeDefinition("crossbuilder:generate:xrd:connectionSecretKeys", markers.DescribesType, ConnectionSecretKeys(nil))),
 }
 
 func init() {
@@ -92,5 +93,13 @@ type DefaultCompositeDeletePolicy struct {
 func (c DefaultCompositeDeletePolicy) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
 	xrd.Spec.DefaultCompositeDeletePolicy = &c.Policy
 	// test(c)
+	return nil
+}
+
+// ConnectionSecretKeys is a marker to specify connection secret keys of an XRD
+type ConnectionSecretKeys []string
+
+func (c ConnectionSecretKeys) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
+	xrd.Spec.ConnectionSecretKeys = c
 	return nil
 }
