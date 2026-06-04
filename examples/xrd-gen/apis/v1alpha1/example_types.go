@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	xpv1 "github.com/crossplane/crossplane-runtime/v2/apis/common/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -24,12 +24,12 @@ type XExampleStatus struct {
 // +genclient
 // +genclient:nonNamespaced
 
-// +kubebuilder:resource:scope=Cluster,categories=crossplane
+// +kubebuilder:resource:scope=Namespaced,categories=crossplane
 // +kubebuilder:subresource:status
-// +crossbuilder:generate:xrd:claimNames:kind=Example,plural=examples
 // +crossbuilder:generate:xrd:defaultCompositionRef:name=example-composition
 // +crossbuilder:generate:xrd:enforcedCompositionRef:name=example-composition-2
-// +crossbuilder:generate:xrd:connectionSecretKeys={username,password}
+// +crossbuilder:generate:xrd:defaultCompositionUpdatePolicy=Automatic
+// +crossbuilder:generate:xrd:metadata:labels={"example-label":"example-value"},annotations={"example-annotation":"example-value"}
 type XExample struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

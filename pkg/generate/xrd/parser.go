@@ -1,7 +1,7 @@
 package xrd
 
 import (
-	xapiext "github.com/crossplane/crossplane/apis/apiextensions/v1"
+	xapiext "github.com/crossplane/crossplane/v2/apis/apiextensions/v2"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-tools/pkg/crd"
 	"sigs.k8s.io/controller-tools/pkg/loader"

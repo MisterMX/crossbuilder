@@ -1,50 +1,25 @@
 package markers
 
 import (
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
-	xapiext "github.com/crossplane/crossplane/apis/apiextensions/v1"
-	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"fmt"
+	"slices"
+
+	xpv1 "github.com/crossplane/crossplane-runtime/v2/apis/common/v1"
+	xapiext "github.com/crossplane/crossplane/v2/apis/apiextensions/v2"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-tools/pkg/markers"
 )
 
-// XRDMarkers lists all markers that directly modify the XRD (not validation
-// schemas).
+// XRDMarkers lists all markers that directly modify the XRD (not validation schemas).
 var XRDMarkers = []*definitionWithHelp{
-	must(markers.MakeDefinition("crossbuilder:generate:xrd:claimNames", markers.DescribesType, ClaimNames{})),
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:defaultCompositionRef", markers.DescribesType, DefaultCompositionRef{})),
 	must(markers.MakeDefinition("crossbuilder:generate:xrd:enforcedCompositionRef", markers.DescribesType, EnforcedCompositionRef{})),
-	must(markers.MakeDefinition("crossbuilder:generate:xrd:defaultCompositeDeletePolicy", markers.DescribesType, DefaultCompositeDeletePolicy{})),
-	must(markers.MakeDefinition("crossbuilder:generate:xrd:connectionSecretKeys", markers.DescribesType, ConnectionSecretKeys(nil))),
+	must(markers.MakeDefinition("crossbuilder:generate:xrd:defaultCompositionUpdatePolicy", markers.DescribesType, DefaultCompositionUpdatePolicy(""))),
+	must(markers.MakeDefinition("crossbuilder:generate:xrd:metadata", markers.DescribesType, Metadata{})),
 }
 
 func init() {
 	AllDefinitions = append(AllDefinitions, XRDMarkers...)
-}
-
-// +controllertools:marker:generateHelp:category=XRD
-
-// ClaimNames is a marker to specify claim names for generated XRDs.
-type ClaimNames struct {
-	Kind       string   `marker:"kind"`
-	Plural     string   `marker:"plural"`
-	Singular   string   `marker:"singular,optional"`
-	ShortNames []string `marker:"shortNames,optional"`
-	ListKind   string   `marker:"listKind,optional"`
-	Categories []string `marker:"categories,optional"`
-}
-
-// ApplyToXRD applies the claim names to the XRD.
-func (c ClaimNames) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
-	xrd.Spec.ClaimNames = &apiext.CustomResourceDefinitionNames{
-		Kind:       c.Kind,
-		Plural:     c.Plural,
-		Singular:   c.Singular,
-		ShortNames: c.ShortNames,
-		ListKind:   c.ListKind,
-		Categories: c.Categories,
-	}
-	// test(c)
-	return nil
 }
 
 // +controllertools:marker:generateHelp:category=XRD
@@ -83,23 +58,39 @@ func (c EnforcedCompositionRef) ApplyToXRD(xrd *xapiext.CompositeResourceDefinit
 
 // +controllertools:marker:generateHelp:category=XRD
 
-// DefaultCompositeDeletePolicy is a marker to specify the default composite
-// delete policy of an XRD.
-type DefaultCompositeDeletePolicy struct {
-	Policy xpv1.CompositeDeletePolicy `marker:"policy"`
-}
+// DefaultCompositionUpdatePolicy is the policy used when updating composites
+// after a new Composition Revision has been created if no policy has been
+// specified on the composite.
+type DefaultCompositionUpdatePolicy string
 
-// ApplyToXRD applies the enforced composition ref to the XRD.
-func (c DefaultCompositeDeletePolicy) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
-	xrd.Spec.DefaultCompositeDeletePolicy = &c.Policy
-	// test(c)
+func (p DefaultCompositionUpdatePolicy) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
+	policy := xpv1.UpdatePolicy(p)
+
+	// Validate that the policy is a valid UpdatePolicy enum value
+	policies := []xpv1.UpdatePolicy{
+		xpv1.UpdateAutomatic,
+		xpv1.UpdateManual,
+	}
+
+	if !slices.Contains(policies, policy) {
+		return fmt.Errorf("invalid DefaultCompositionUpdatePolicy: %q", p)
+	}
+
+	xrd.Spec.DefaultCompositionUpdatePolicy = &policy
 	return nil
 }
 
-// ConnectionSecretKeys is a marker to specify connection secret keys of an XRD
-type ConnectionSecretKeys []string
+// +controllertools:marker:generateHelp:category=XRD
 
-func (c ConnectionSecretKeys) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
-	xrd.Spec.ConnectionSecretKeys = c
+type Metadata struct {
+	Labels      *map[string]string `marker:"labels"`
+	Annotations *map[string]string `marker:"annotations"`
+}
+
+func (m Metadata) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
+	xrd.Spec.Metadata = &xapiext.CompositeResourceDefinitionSpecMetadata{
+		Labels:      ptr.Deref(m.Labels, map[string]string{}),
+		Annotations: ptr.Deref(m.Annotations, map[string]string{}),
+	}
 	return nil
 }

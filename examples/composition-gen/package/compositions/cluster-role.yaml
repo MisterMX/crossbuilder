@@ -1,0 +1,14 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: cluster-role
+spec:
+  compositeTypeRef:
+    apiVersion: test.example.com/v1alpha1
+    kind: XExample
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: example-function
+    step: example-step
+  writeConnectionSecretsToNamespace: example-namespace

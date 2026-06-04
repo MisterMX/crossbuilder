@@ -1,7 +1,7 @@
 package build
 
 import (
-	xapiextv1 "github.com/crossplane/crossplane/apis/apiextensions/v1"
+	xapiextv1 "github.com/crossplane/crossplane/v2/apis/apiextensions/v1"
 	"github.com/pkg/errors"
 )
 

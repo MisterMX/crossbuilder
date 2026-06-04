@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 
-	xapiext "github.com/crossplane/crossplane/apis/apiextensions/v1"
+	xapiext "github.com/crossplane/crossplane/v2/apis/apiextensions/v2"
 	"github.com/pkg/errors"
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-tools/pkg/loader"
 	"sigs.k8s.io/controller-tools/pkg/markers"
 
-	xrdmarkers "github.com/mistermx/crossbuilder/pkg/generate/xrd/markers"
+	xrdmarkers "github.com/mistermx/crossbuilder/v2/pkg/generate/xrd/markers"
 )
 
 const (
@@ -158,15 +158,13 @@ func convertCRDToXRD(crd *apiext.CustomResourceDefinition) (*xapiext.CompositeRe
 	xrd := &xapiext.CompositeResourceDefinition{
 		ObjectMeta: crd.ObjectMeta,
 		Spec: xapiext.CompositeResourceDefinitionSpec{
-			Group: crd.Spec.Group,
-			Names: crd.Spec.Names,
-			//ClaimNames: ,
+			Group:    crd.Spec.Group,
+			Names:    crd.Spec.Names,
+			Scope:    xapiext.CompositeResourceScope(crd.Spec.Scope),
 			Versions: xrdVersions,
-			// DefaultCompositionRef: ,
-			// EnforcedCompositionRef: ,
-
 		},
 	}
+
 	xrd.SetGroupVersionKind(xapiext.CompositeResourceDefinitionGroupVersionKind)
 	return xrd, nil
 }

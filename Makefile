@@ -54,7 +54,7 @@ LD_FLAGS=-ldflags " \
     "
 .PHONY: build
 build: ## Build the project locally
-	go build $(LD_FLAGS) -o bin/kubebuilder ./cmd
+	go build $(LD_FLAGS) -o bin/xrd-gen ./cmd/xrd-gen/main.go
 
 .PHONY: install
 install: build ## Build and install the binary with the current source code. Use it to test your changes locally.
@@ -82,7 +82,7 @@ GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
 golangci-lint:
 	@[ -f $(GOLANGCI_LINT) ] || { \
 	set -e ;\
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell dirname $(GOLANGCI_LINT)) v1.45.2 ;\
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(shell dirname $(GOLANGCI_LINT)) v2.12.2 ;\
 	}
 
 .PHONY: apidiff
