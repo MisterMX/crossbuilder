@@ -13,8 +13,8 @@ instead of generating CRDs (Custom Resource Definitions) it generates XRDs
 Crossbuilder has every feature that Kubebuilder's CRD generator provides plus
 the ability to define XRD specific fields.
 
-Take a look at the [xrd-gen examples](./examples/xrd-gen/apis/generate.go) for
-more details.
+Take a look at the [v1 XRD example](./examples/xrd-gen/apis/generate.go) and
+[v2 XRD example](./examples/xrd-gen-v2/apis/generate.go) for more details.
 
 ## Composition Generation
 
