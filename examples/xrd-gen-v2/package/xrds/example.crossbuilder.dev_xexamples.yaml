@@ -1,0 +1,47 @@
+---
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: xexamples.example.crossbuilder.dev
+spec:
+  defaultCompositionRef:
+    name: example
+  group: example.crossbuilder.dev
+  names:
+    categories:
+    - crossplane
+    kind: XExample
+    listKind: XExampleList
+    plural: xexamples
+    singular: xexample
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              parameters:
+                properties:
+                  message:
+                    type: string
+                required:
+                - message
+                type: object
+            required:
+            - parameters
+            type: object
+          status:
+            properties:
+              ready:
+                type: boolean
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
