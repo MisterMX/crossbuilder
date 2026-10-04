@@ -1,8 +1,11 @@
 package markers
 
 import (
+	"fmt"
+
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	xapiext "github.com/crossplane/crossplane/apis/apiextensions/v1"
+	xapiextv2 "github.com/crossplane/crossplane/v2/apis/apiextensions/v2"
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/controller-tools/pkg/markers"
 )
@@ -47,6 +50,19 @@ func (c ClaimNames) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version
 	return nil
 }
 
+func (c ClaimNames) ApplyToXRDV2(xrd *xapiextv2.CompositeResourceDefinition, _ string) error {
+	xrd.Spec.ClaimNames = &apiext.CustomResourceDefinitionNames{
+		Kind:       c.Kind,
+		Plural:     c.Plural,
+		Singular:   c.Singular,
+		ShortNames: c.ShortNames,
+		ListKind:   c.ListKind,
+		Categories: c.Categories,
+	}
+	xrd.Spec.Scope = xapiextv2.CompositeResourceScope("LegacyCluster")
+	return nil
+}
+
 // +controllertools:marker:generateHelp:category=XRD
 
 // DefaultCompositionRef is a marker to specify the default composition ref of
@@ -61,6 +77,11 @@ func (c DefaultCompositionRef) ApplyToXRD(xrd *xapiext.CompositeResourceDefiniti
 		Name: c.Name,
 	}
 	// test(c)
+	return nil
+}
+
+func (c DefaultCompositionRef) ApplyToXRDV2(xrd *xapiextv2.CompositeResourceDefinition, _ string) error {
+	xrd.Spec.DefaultCompositionRef = &xapiextv2.CompositionReference{Name: c.Name}
 	return nil
 }
 
@@ -81,6 +102,11 @@ func (c EnforcedCompositionRef) ApplyToXRD(xrd *xapiext.CompositeResourceDefinit
 	return nil
 }
 
+func (c EnforcedCompositionRef) ApplyToXRDV2(xrd *xapiextv2.CompositeResourceDefinition, _ string) error {
+	xrd.Spec.EnforcedCompositionRef = &xapiextv2.CompositionReference{Name: c.Name}
+	return nil
+}
+
 // +controllertools:marker:generateHelp:category=XRD
 
 // DefaultCompositeDeletePolicy is a marker to specify the default composite
@@ -96,10 +122,18 @@ func (c DefaultCompositeDeletePolicy) ApplyToXRD(xrd *xapiext.CompositeResourceD
 	return nil
 }
 
+func (DefaultCompositeDeletePolicy) ApplyToXRDV2(_ *xapiextv2.CompositeResourceDefinition, _ string) error {
+	return fmt.Errorf("default composite delete policy is not supported by apiextensions.crossplane.io/v2")
+}
+
 // ConnectionSecretKeys is a marker to specify connection secret keys of an XRD
 type ConnectionSecretKeys []string
 
 func (c ConnectionSecretKeys) ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error {
 	xrd.Spec.ConnectionSecretKeys = c
 	return nil
+}
+
+func (ConnectionSecretKeys) ApplyToXRDV2(_ *xapiextv2.CompositeResourceDefinition, _ string) error {
+	return fmt.Errorf("XR connection secret keys are not supported by apiextensions.crossplane.io/v2")
 }

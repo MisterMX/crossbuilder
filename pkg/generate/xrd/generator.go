@@ -6,6 +6,7 @@ import (
 	"go/ast"
 
 	xapiext "github.com/crossplane/crossplane/apis/apiextensions/v1"
+	xapiextv2 "github.com/crossplane/crossplane/v2/apis/apiextensions/v2"
 	"github.com/pkg/errors"
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -19,14 +20,21 @@ import (
 )
 
 const (
-	errGenerateCRDs      = "failed to generate CRDs"
-	errConvertCRDtoXRD   = "failed to convert CRD to XRD"
-	errConvertJSONSchema = "failed to convert JSON schema"
-	errWriteXRD          = "failed to write XRD to YAML"
+	errGenerateCRDs          = "failed to generate CRDs"
+	errConvertCRDtoXRD       = "failed to convert CRD to XRD"
+	errConvertJSONSchema     = "failed to convert JSON schema"
+	errWriteXRD              = "failed to write XRD to YAML"
+	errUnsupportedAPIVersion = "unsupported XRD apiVersion"
+
+	APIVersionV1 = "v1"
+	APIVersionV2 = "v2"
 )
 
 // Generator is a generator for XRDs.
 type Generator struct {
+	// APIVersion specifies the Crossplane XRD API version to generate. Defaults to v2.
+	APIVersion string `marker:"apiVersion,optional"`
+
 	// IgnoreUnexportedFields indicates that we should skip unexported fields.
 	//
 	// Left unspecified, the default is false.
@@ -100,6 +108,11 @@ func (Generator) RegisterMarkers(into *markers.Registry) error {
 
 // Generate generates the XRDs for the given GenerationContext.
 func (g Generator) Generate(ctx *genall.GenerationContext) error {
+	apiVersion, err := g.apiVersion()
+	if err != nil {
+		return err
+	}
+
 	// Init CRD generator and store generated CRDs in memory
 	crdStorage := newCRDStorage()
 	crdGenerator := crd.Generator{
@@ -130,23 +143,77 @@ func (g Generator) Generate(ctx *genall.GenerationContext) error {
 		return errors.Wrap(err, errGenerateCRDs)
 	}
 
-	xrds := []*xapiext.CompositeResourceDefinition{}
+	type xrdOutput struct {
+		filename string
+		object   interface{}
+	}
+	xrds := []xrdOutput{}
 	for _, crd := range crdStorage.CRDs {
+		if apiVersion == APIVersionV2 {
+			xrd, err := convertCRDToXRDV2(crd)
+			if err != nil {
+				return errors.Wrap(err, errConvertCRDtoXRD)
+			}
+			xrdParser.ApplyForXRDV2(xrd)
+			xrds = append(xrds, xrdOutput{
+				filename: fmt.Sprintf("%s_%s.yaml", xrd.Spec.Group, xrd.Spec.Names.Plural),
+				object:   xrd,
+			})
+			continue
+		}
+
 		xrd, err := convertCRDToXRD(crd)
 		if err != nil {
 			return errors.Wrap(err, errConvertCRDtoXRD)
 		}
 		xrdParser.ApplyForXRD(xrd)
-		xrds = append(xrds, xrd)
+		xrds = append(xrds, xrdOutput{
+			filename: fmt.Sprintf("%s_%s.yaml", xrd.Spec.Group, xrd.Spec.Names.Plural),
+			object:   xrd,
+		})
 	}
 
 	for _, xrd := range xrds {
-		fileName := fmt.Sprintf("%s_%s.yaml", xrd.Spec.Group, xrd.Spec.Names.Plural)
-		if err := ctx.WriteYAML(fileName, "", []interface{}{xrd}, genall.WithTransform(transformRemoveCRDStatus)); err != nil {
+		if err := ctx.WriteYAML(xrd.filename, "", []interface{}{xrd.object}, genall.WithTransform(transformRemoveCRDStatus)); err != nil {
 			return errors.Wrap(err, errWriteXRD)
 		}
 	}
 	return nil
+}
+
+func (g Generator) apiVersion() (string, error) {
+	apiVersion := g.APIVersion
+	if apiVersion == "" {
+		apiVersion = APIVersionV2
+	}
+	if apiVersion != APIVersionV1 && apiVersion != APIVersionV2 {
+		return "", errors.Errorf("%s %q (supported: %s, %s)", errUnsupportedAPIVersion, apiVersion, APIVersionV1, APIVersionV2)
+	}
+	return apiVersion, nil
+}
+
+func convertCRDToXRDV2(crd *apiext.CustomResourceDefinition) (*xapiextv2.CompositeResourceDefinition, error) {
+	xrdVersions, err := buildXRDVersionsV2(crd.Spec.Versions)
+	if err != nil {
+		return nil, err
+	}
+
+	scope := xapiextv2.CompositeResourceScope(crd.Spec.Scope)
+	if scope == "" {
+		scope = xapiextv2.CompositeResourceScope("Namespaced")
+	}
+
+	xrd := &xapiextv2.CompositeResourceDefinition{
+		ObjectMeta: crd.ObjectMeta,
+		Spec: xapiextv2.CompositeResourceDefinitionSpec{
+			Group:    crd.Spec.Group,
+			Names:    crd.Spec.Names,
+			Scope:    scope,
+			Versions: xrdVersions,
+		},
+	}
+	xrd.SetGroupVersionKind(xapiextv2.CompositeResourceDefinitionGroupVersionKind)
+	return xrd, nil
 }
 
 func convertCRDToXRD(crd *apiext.CustomResourceDefinition) (*xapiext.CompositeResourceDefinition, error) {
@@ -199,6 +266,34 @@ func buildXRDVersions(crdVersions []apiext.CustomResourceDefinitionVersion) ([]x
 	//       if multiple versions exist per XRD.
 	//       There needs to be a way for the user to specify which version is
 	//       the desired one.
+	if len(xrdVersions) == 1 {
+		xrdVersions[0].Referenceable = true
+	}
+
+	return xrdVersions, nil
+}
+
+func buildXRDVersionsV2(crdVersions []apiext.CustomResourceDefinitionVersion) ([]xapiextv2.CompositeResourceDefinitionVersion, error) {
+	xrdVersions := make([]xapiextv2.CompositeResourceDefinitionVersion, len(crdVersions))
+	for i, cV := range crdVersions {
+		schema, err := convertJSONSchemaToRawExtension(cV.Schema.OpenAPIV3Schema)
+		if err != nil {
+			return nil, errors.Wrap(err, errConvertJSONSchema)
+		}
+
+		xrdVersions[i] = xapiextv2.CompositeResourceDefinitionVersion{
+			Name:                     cV.Name,
+			Served:                   cV.Served,
+			DeprecationWarning:       cV.DeprecationWarning,
+			Schema:                   &xapiextv2.CompositeResourceValidation{OpenAPIV3Schema: schema},
+			AdditionalPrinterColumns: cV.AdditionalPrinterColumns,
+		}
+
+		if cV.Deprecated {
+			xrdVersions[i].Deprecated = ptr.To(true)
+		}
+	}
+
 	if len(xrdVersions) == 1 {
 		xrdVersions[0].Referenceable = true
 	}

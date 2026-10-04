@@ -2,6 +2,8 @@ package xrd
 
 import (
 	xapiext "github.com/crossplane/crossplane/apis/apiextensions/v1"
+	xapiextv2 "github.com/crossplane/crossplane/v2/apis/apiextensions/v2"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-tools/pkg/crd"
 	"sigs.k8s.io/controller-tools/pkg/loader"
@@ -11,6 +13,11 @@ import (
 // XRDMarker defines a marker for XRD types.
 type XRDMarker interface { // nolint:golint
 	ApplyToXRD(xrd *xapiext.CompositeResourceDefinition, version string) error
+}
+
+// XRDMarkerV2 defines a marker that can modify a Crossplane v2 XRD.
+type XRDMarkerV2 interface {
+	ApplyToXRDV2(xrd *xapiextv2.CompositeResourceDefinition, version string) error
 }
 
 // PackageOverride overrides the loading of some package
@@ -124,9 +131,32 @@ func (p *Parser) NeedPackage(pkg *loader.Package) {
 
 // ApplyForXRD applies all markers to the generated XRD.
 func (p *Parser) ApplyForXRD(xrd *xapiext.CompositeResourceDefinition) {
+	p.applyForXRD(xrd.Spec.Group, xrd.Spec.Names.Kind, func(val interface{}, version string) (bool, error) {
+		xrdMarker, ok := val.(XRDMarker)
+		if !ok {
+			return false, nil
+		}
+		return true, xrdMarker.ApplyToXRD(xrd, version)
+	})
+}
+
+// ApplyForXRDV2 applies all v2-compatible markers to the generated XRD.
+func (p *Parser) ApplyForXRDV2(xrd *xapiextv2.CompositeResourceDefinition) {
+	p.applyForXRD(xrd.Spec.Group, xrd.Spec.Names.Kind, func(val interface{}, version string) (bool, error) {
+		if xrdMarker, ok := val.(XRDMarkerV2); ok {
+			return true, xrdMarker.ApplyToXRDV2(xrd, version)
+		}
+		if _, isV1Marker := val.(XRDMarker); isV1Marker {
+			return true, errors.Errorf("marker %T does not support XRD apiVersion v2", val)
+		}
+		return false, nil
+	})
+}
+
+func (p *Parser) applyForXRD(group, kind string, apply func(interface{}, string) (bool, error)) {
 	packages := []*loader.Package{}
 	for pkg, gv := range p.GroupVersions {
-		if gv.Group != xrd.Spec.Group {
+		if gv.Group != group {
 			continue
 		}
 		packages = append(packages, pkg)
@@ -134,7 +164,7 @@ func (p *Parser) ApplyForXRD(xrd *xapiext.CompositeResourceDefinition) {
 
 	// apply markers
 	for _, pkg := range packages {
-		typeIdent := crd.TypeIdent{Package: pkg, Name: xrd.Spec.Names.Kind}
+		typeIdent := crd.TypeIdent{Package: pkg, Name: kind}
 		typeInfo := p.Types[typeIdent]
 		if typeInfo == nil {
 			continue
@@ -143,11 +173,11 @@ func (p *Parser) ApplyForXRD(xrd *xapiext.CompositeResourceDefinition) {
 
 		for _, markerVals := range typeInfo.Markers {
 			for _, val := range markerVals {
-				xrdMarker, isXRDMarker := val.(XRDMarker)
-				if !isXRDMarker {
+				applied, err := apply(val, ver)
+				if !applied {
 					continue
 				}
-				if err := xrdMarker.ApplyToXRD(xrd, ver); err != nil {
+				if err != nil {
 					pkg.AddError(loader.ErrFromNode(err /* an okay guess */, typeInfo.RawSpec))
 				}
 			}
